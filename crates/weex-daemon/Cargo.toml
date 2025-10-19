@@ -1,0 +1,22 @@
+[package]
+name = "weex-daemon"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "weexd"
+path = "src/main.rs"
+
+[dependencies]
+weex-core = { path = "../weex-core" }
+weex-db = { path = "../weex-db" }
+weex-ingest = { path = "../weex-ingest" }
+weex-archive = { path = "../weex-archive" }
+tokio.workspace = true
+sqlx.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
