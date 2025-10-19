@@ -5,14 +5,16 @@
 //! development, to be implemented with actual hardware protocol support.
 
 pub mod driver;
+pub mod interceptor;
 pub mod simulator;
 
 pub use driver::*;
+pub use interceptor::*;
 pub use simulator::*;
 
-use weex_core::WeatherPacket;
 use thiserror::Error;
 use tokio::sync::mpsc;
+use weex_core::WeatherPacket;
 
 #[derive(Debug, Error)]
 pub enum IngestError {
