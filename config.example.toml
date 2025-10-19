@@ -1,0 +1,7 @@
+[station]
+id = "home"
+timezone = "America/Chicago"
+
+[sinks.http]
+bind = "0.0.0.0:8080"
+

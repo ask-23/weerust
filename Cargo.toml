@@ -6,6 +6,9 @@ members = [
     "crates/weex-ingest",
     "crates/weex-archive",
     "crates/weex-daemon",
+    "crates/weewx-obs",
+    "crates/weewx-config",
+    "crates/weewx-cli",
     "tests/golden",
 ]
 
