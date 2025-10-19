@@ -1,0 +1,35 @@
+[
+  {
+    "dateTime": 1700000100,
+    "interval": 300,
+    "outTemp": 20.5,
+    "outHumidity": 65.0,
+    "barometer": 1013.25,
+    "windSpeed": 5.2,
+    "windDir": 180,
+    "rain": 0.0,
+    "rainRate": 0.0
+  },
+  {
+    "dateTime": 1700000200,
+    "interval": 300,
+    "outTemp": 20.7,
+    "outHumidity": 64.5,
+    "barometer": 1013.30,
+    "windSpeed": 5.5,
+    "windDir": 185,
+    "rain": 0.0,
+    "rainRate": 0.0
+  },
+  {
+    "dateTime": 1700000300,
+    "interval": 300,
+    "outTemp": 20.9,
+    "outHumidity": 64.0,
+    "barometer": 1013.35,
+    "windSpeed": 5.8,
+    "windDir": 190,
+    "rain": 0.0,
+    "rainRate": 0.0
+  }
+]

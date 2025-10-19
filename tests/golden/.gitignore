@@ -1,0 +1,11 @@
+# Rust build artifacts
+target/
+Cargo.lock
+
+# Test outputs
+baseline/actual_dump.sql
+baseline/*.diff
+
+# Temporary files
+*.tmp
+*.bak

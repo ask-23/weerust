@@ -45,4 +45,4 @@ tempfile = "3.8"
 async-trait = "0.1"
 
 # URL parsing
-url = "2.5":w
+url = "2.5"
