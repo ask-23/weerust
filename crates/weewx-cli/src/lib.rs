@@ -8,8 +8,8 @@ use axum::{
     extract::{Query, State},
     http::{header, StatusCode},
     response::IntoResponse,
-    routing::get,
-    Json, Router,
+    routing::{get, post},
+    Form, Json, Router,
 };
 use opentelemetry::metrics::{Counter, MeterProvider};
 use opentelemetry_prometheus::exporter;
@@ -65,7 +65,8 @@ pub fn build_app() -> (Router, Arc<AppState>) {
         .route("/metrics", get(metrics))
         .route("/api/v1/current", get(current))
         .route("/api/v1/history", get(history))
-        .route("/ingest/ecowitt", get(ingest_ecowitt))
+        .route("/ingest/ecowitt", get(ingest_ecowitt).post(ingest_post))
+        .route("/data", post(ingest_post))
         .with_state(Arc::clone(&state));
 
     (router, state)
@@ -270,6 +271,92 @@ async fn ingest_ecowitt(
     inject_packet(&state, packet).await;
 
     // TODO: Optionally emit to sinks (Fs/Sqlite/Postgres/Influx) once shared sink wiring is added to AppState
+
+    (StatusCode::OK, Json(serde_json::json!({"status":"ok"}))).into_response()
+}
+
+async fn ingest_post(
+    State(state): State<Arc<AppState>>,
+    Form(q): Form<HashMap<String, String>>,
+) -> impl IntoResponse {
+    state.requests_total.add(1, &[]);
+    // dateutc can be "now" or "YYYY-MM-DD HH:MM:SS" (UTC)
+    let date_time = match q.get("dateutc").map(|s| s.as_str()) {
+        Some("now") | None => chrono::Utc::now().timestamp(),
+        Some(s) => chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
+            .ok()
+            .map(|naive| {
+                chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(naive, chrono::Utc)
+                    .timestamp()
+            })
+            .unwrap_or_else(|| chrono::Utc::now().timestamp()),
+    };
+
+    let station = q.get("stationtype").cloned();
+    let mut obs: HashMap<String, ObservationValue> = HashMap::new();
+
+    // Helpers
+    let parse_f64 = |k: &str| q.get(k).and_then(|v| v.parse::<f64>().ok());
+    let parse_i64 = |k: &str| q.get(k).and_then(|v| v.parse::<i64>().ok());
+
+    // Temperature: tempf (F) -> outTemp (C)
+    if let Some(tf) = parse_f64("tempf") {
+        let c = (tf - 32.0) * (5.0 / 9.0);
+        obs.insert("outTemp".into(), ObservationValue::Float(c));
+    }
+    // Humidity (% RH)
+    if let Some(h) = parse_i64("humidity") {
+        obs.insert("humidity".into(), ObservationValue::Integer(h));
+    }
+    // Barometer: baromin (inHg) -> hPa
+    if let Some(inhg) = parse_f64("baromin") {
+        let hpa = inhg * 33.8638866667;
+        obs.insert("barometer".into(), ObservationValue::Float(hpa));
+    }
+    // Also handle baromabsin and baromrelin
+    if let Some(inhg) = parse_f64("baromabsin") {
+        let hpa = inhg * 33.8638866667;
+        obs.insert("barometerAbs".into(), ObservationValue::Float(hpa));
+    }
+    if let Some(inhg) = parse_f64("baromrelin") {
+        let hpa = inhg * 33.8638866667;
+        obs.insert("barometer".into(), ObservationValue::Float(hpa));
+    }
+    // Wind: mph -> m/s
+    if let Some(mph) = parse_f64("windspeedmph") {
+        let mps = mph * 0.44704;
+        obs.insert("windSpeed".into(), ObservationValue::Float(mps));
+    }
+    if let Some(mph) = parse_f64("windgustmph") {
+        let mps = mph * 0.44704;
+        obs.insert("windGust".into(), ObservationValue::Float(mps));
+    }
+    if let Some(dir) = parse_i64("winddir") {
+        obs.insert("windDir".into(), ObservationValue::Integer(dir));
+    }
+    // Rain: inches -> mm
+    if let Some(rri) = parse_f64("rainin") {
+        obs.insert("rainRate".into(), ObservationValue::Float(rri * 25.4));
+    }
+    if let Some(dri) = parse_f64("dailyrainin") {
+        obs.insert("dailyRain".into(), ObservationValue::Float(dri * 25.4));
+    }
+    // Solar / UV
+    if let Some(sr) = parse_f64("solarradiation") {
+        obs.insert("radiation".into(), ObservationValue::Float(sr));
+    }
+    if let Some(uv) = parse_f64("uv") {
+        obs.insert("uv".into(), ObservationValue::Float(uv));
+    }
+
+    let packet = WeatherPacket {
+        date_time,
+        station,
+        interval: None,
+        observations: obs,
+    };
+
+    inject_packet(&state, packet).await;
 
     (StatusCode::OK, Json(serde_json::json!({"status":"ok"}))).into_response()
 }
