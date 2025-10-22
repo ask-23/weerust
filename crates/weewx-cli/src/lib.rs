@@ -51,7 +51,7 @@ pub fn build_app() -> (Router, Arc<AppState>) {
         provider,
         requests_total,
         latest: Mutex::new(None),
-        history: Mutex::new(Vec::with_capacity(256)),
+        history: Mutex::new(Vec::with_capacity(HISTORY_CAP)),
     });
 
     let router = Router::new()
