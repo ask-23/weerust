@@ -1,8 +1,7 @@
 //! Database client and connection management
 
-use crate::{DbError, DbResult};
+use crate::DbResult;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPool, MySqlPoolOptions};
-use sqlx::ConnectOptions;
 use std::time::Duration;
 
 /// Database client wrapping sqlx connection pool
@@ -112,7 +111,7 @@ mod tests {
 
     #[test]
     fn test_connection_builder() {
-        let opts = DbConnectionBuilder::new("weewx")
+        let _opts = DbConnectionBuilder::new("weewx")
             .host("db.example.com")
             .port(3307)
             .username("admin")

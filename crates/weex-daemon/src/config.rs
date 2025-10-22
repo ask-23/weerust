@@ -18,6 +18,7 @@ pub struct DaemonConfig {
     pub unit_system: i32,
 
     /// Station driver type
+    #[allow(dead_code)]
     pub driver: String,
 }
 

@@ -34,7 +34,7 @@ async fn udp_packet_populates_api() {
             .await
             .unwrap();
         if res.status() == StatusCode::OK {
-            let body = to_bytes(res.into_body()).await.unwrap();
+            let body = to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
             let text = String::from_utf8(body.to_vec()).unwrap();
             if text.contains("outTemp") {
                 return;

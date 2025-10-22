@@ -1,6 +1,6 @@
 use anyhow::Result;
 use rusqlite::{params, Connection};
-use weex_core::{Sink, WeatherPacket};
+use weex_core::WeatherPacket;
 
 pub struct SqliteSink {
     conn: Connection,
@@ -18,13 +18,9 @@ impl SqliteSink {
         )?;
         Ok(Self { conn })
     }
-}
 
-#[async_trait::async_trait]
-impl Sink for SqliteSink {
-    async fn emit(&mut self, packet: &WeatherPacket) -> Result<()> {
+    pub fn emit_sync(&mut self, packet: &WeatherPacket) -> Result<()> {
         let json = serde_json::to_string(packet)?;
-        // Synchronous insert; acceptable for initial implementation.
         self.conn.execute(
             "INSERT INTO packets (dt, json) VALUES (?1, ?2)",
             params![packet.date_time, json],
@@ -33,12 +29,15 @@ impl Sink for SqliteSink {
     }
 }
 
+// NOTE: Cannot implement Sink trait because rusqlite::Connection is not Sync
+// TODO: Use tokio_rusqlite or Arc<Mutex<Connection>> for async support
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn inserts_packet() {
+    #[test]
+    fn inserts_packet() {
         let dir = tempfile::tempdir().unwrap();
         let db_path = dir.path().join("weewx.db");
         let mut sink = SqliteSink::new(&db_path).unwrap();
@@ -48,7 +47,7 @@ mod tests {
             interval: None,
             observations: Default::default(),
         };
-        sink.emit(&pkt).await.unwrap();
+        sink.emit_sync(&pkt).unwrap();
         let count: i64 = sink
             .conn
             .query_row("SELECT COUNT(*) FROM packets", [], |r| r.get(0))

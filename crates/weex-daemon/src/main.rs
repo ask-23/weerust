@@ -13,7 +13,7 @@ use tracing::{error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 use weex_archive::IntervalAggregator;
-use weex_db::{DbClient, DbConnectionBuilder};
+use weex_db::DbClient;
 use weex_ingest::simulator::SimulatorDriver;
 use weex_ingest::StationDriver;
 
@@ -70,7 +70,7 @@ async fn main() -> Result<()> {
         result = scheduler.run() => {
             if let Err(e) = result {
                 error!("Scheduler error: {}", e);
-                return Err(e.into());
+                return Err(e);
             }
         }
         _ = shutdown => {

@@ -3,7 +3,6 @@ use axum::{
     http::{header, Request, StatusCode},
 };
 use tower::ServiceExt;
-use weex_core::ObservationValue;
 
 /// Test valid Ecowitt format POST request
 #[tokio::test]
@@ -53,7 +52,7 @@ async fn test_ecowitt_post_valid() {
         .unwrap();
 
     assert_eq!(res.status(), StatusCode::OK);
-    let body = to_bytes(res.into_body()).await.unwrap();
+    let body = to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
     let text = String::from_utf8(body.to_vec()).unwrap();
 
     // Verify expected fields are present
@@ -319,12 +318,12 @@ async fn test_post_then_get_persistence() {
         .unwrap();
 
     assert_eq!(res.status(), StatusCode::OK);
-    let body = to_bytes(res.into_body()).await.unwrap();
+    let body = to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
     let text = String::from_utf8(body.to_vec()).unwrap();
 
     // Verify the temperature we posted appears in the response
     // (exact format may vary based on implementation)
-    assert!(text.len() > 0);
+    assert!(!text.is_empty());
 }
 
 /// Test POST with special characters in values

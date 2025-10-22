@@ -1,7 +1,7 @@
 //! Database query operations for WeeWX tables
 
-use crate::schema::{ArchiveRow, MetadataRow};
-use crate::{DbClient, DbError, DbResult};
+use crate::schema::ArchiveRow;
+use crate::{DbClient, DbResult};
 use sqlx::Row;
 use tracing::{debug, instrument};
 
@@ -157,8 +157,6 @@ impl DbClient {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     // Note: Integration tests with real database are in tests/golden/
     // These are just unit tests for query structure validation
 
@@ -166,6 +164,5 @@ mod tests {
     fn test_query_syntax() {
         // Queries are validated at runtime by sqlx
         // This test just ensures module compiles
-        assert!(true);
     }
 }

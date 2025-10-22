@@ -87,6 +87,7 @@ impl Scheduler {
     }
 
     /// Check if scheduler is running
+    #[allow(dead_code)]
     pub fn is_running(&self) -> bool {
         self.running
     }
@@ -94,7 +95,6 @@ impl Scheduler {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     // Note: Full integration tests with DB are in tests/golden/
     // These are just structural tests

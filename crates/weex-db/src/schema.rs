@@ -4,7 +4,6 @@
 //! existing MySQL schema created by Python WeeWX. Do not modify
 //! field names or types without verifying against production schema.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 

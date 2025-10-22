@@ -6,7 +6,7 @@ use tower::ServiceExt;
 
 #[tokio::test]
 async fn ecowitt_upload_populates_api() {
-    let (app, state) = weewx_cli::build_app();
+    let (app, _state) = weewx_cli::build_app();
     // Simulate Ecowitt GET upload
     let uri = "/ingest/ecowitt?PASSKEY=ABC&stationtype=GW1100&dateutc=now&tempf=72.5&baromin=29.92&humidity=55&windspeedmph=5.0&windgustmph=7.0&winddir=180";
     let res = app
@@ -28,7 +28,7 @@ async fn ecowitt_upload_populates_api() {
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
-    let body = to_bytes(res.into_body()).await.unwrap();
+    let body = to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
     let text = String::from_utf8(body.to_vec()).unwrap();
     assert!(text.contains("outTemp"));
     assert!(text.contains("barometer"));

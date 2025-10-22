@@ -4,7 +4,7 @@ use crate::{IngestError, IngestResult, StationDriver};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::time::{sleep, Duration};
-use weex_core::{unit_systems, ObservationValue, WeatherPacket};
+use weex_core::{ObservationValue, WeatherPacket};
 
 /// Simulator driver that generates synthetic weather data
 pub struct SimulatorDriver {

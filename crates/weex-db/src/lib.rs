@@ -8,7 +8,6 @@ pub mod queries;
 pub mod schema;
 
 pub use client::*;
-pub use queries::*;
 pub use schema::*;
 
 use thiserror::Error;

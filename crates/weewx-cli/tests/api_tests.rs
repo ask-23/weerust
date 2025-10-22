@@ -45,7 +45,7 @@ async fn current_and_history_endpoints() {
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
-    let body = to_bytes(res.into_body()).await.unwrap();
+    let body = to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
     let text = String::from_utf8(body.to_vec()).unwrap();
     assert!(text.contains("\"outTemp\""));
 
@@ -61,7 +61,7 @@ async fn current_and_history_endpoints() {
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
-    let body = to_bytes(res.into_body()).await.unwrap();
+    let body = to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
     let text = String::from_utf8(body.to_vec()).unwrap();
     assert!(text.starts_with("["));
 }

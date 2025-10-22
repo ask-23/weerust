@@ -1,4 +1,3 @@
-#![cfg(feature = "postgres")]
 use anyhow::Result;
 use sqlx::{Pool, Postgres};
 use weex_core::{Sink, WeatherPacket};

@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use weex_core::{Sink, WeatherPacket};
 
 pub struct FsSink {
-    dir: PathBuf,
+    _dir: PathBuf,
     file: PathBuf,
 }
 
@@ -21,7 +21,7 @@ impl FsSink {
         let dir = dir.as_ref().to_path_buf();
         create_dir_all(&dir)?;
         let file = dir.join("packets.jsonl");
-        Ok(Self { dir, file })
+        Ok(Self { _dir: dir, file })
     }
 }
 

@@ -10,6 +10,9 @@ license.workspace = true
 name = "weexd"
 path = "src/main.rs"
 
+[features]
+legacy_golden = []
+
 [dependencies]
 weex-core = { path = "../weex-core" }
 weex-db = { path = "../weex-db" }

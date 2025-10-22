@@ -200,18 +200,16 @@ async fn ingest_ecowitt(
     Query(q): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     state.requests_total.add(1, &[]);
-    // dateutc can be "now" or "YYYY-MM-DD HH:MM:SS" (UTC)
+    // dateutc can be "now" or "YYYY-MM-DD HH:M:SS" (UTC)
     let date_time = match q.get("dateutc").map(|s| s.as_str()) {
-        Some("now") | None => chrono::Utc::now().timestamp() as i64,
+        Some("now") | None => chrono::Utc::now().timestamp(),
         Some(s) => chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
             .ok()
-            .and_then(|naive| {
+            .map(|naive| {
                 chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(naive, chrono::Utc)
                     .timestamp()
-                    .try_into()
-                    .ok()
             })
-            .unwrap_or_else(|| chrono::Utc::now().timestamp() as i64),
+            .unwrap_or_else(|| chrono::Utc::now().timestamp()),
     };
 
     let station = q.get("stationtype").cloned();

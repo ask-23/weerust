@@ -1,10 +1,9 @@
 //! Archive interval aggregation logic
 
-use crate::{ArchiveError, ArchiveResult, PacketBuffer};
-use chrono::{DateTime, Utc};
+use crate::{ArchiveResult, PacketBuffer};
 use std::collections::HashMap;
 use tracing::{debug, info, instrument};
-use weex_core::{aggregate_packets, unit_systems, ArchiveRecord, ObservationValue, WeatherPacket};
+use weex_core::{aggregate_packets, WeatherPacket};
 use weex_db::{schema::ArchiveRow, DbClient};
 
 /// Aggregator for converting packets to archive records

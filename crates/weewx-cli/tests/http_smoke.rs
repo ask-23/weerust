@@ -64,7 +64,7 @@ async fn health_ready_metrics_endpoints() {
     assert_eq!(res.status(), StatusCode::OK);
     let ct = res.headers().get("content-type").unwrap().to_str().unwrap();
     assert!(ct.starts_with("text/plain"));
-    let body = to_bytes(res.into_body()).await.unwrap();
+    let body = to_bytes(res.into_body(), 1024 * 1024).await.unwrap();
     let text = String::from_utf8(body.to_vec()).unwrap();
     assert!(text.contains("weewx_requests_total"));
 }

@@ -1,4 +1,3 @@
-#![cfg(feature = "influx")]
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use weex_core::{ObservationValue, Sink, WeatherPacket};
@@ -70,8 +69,9 @@ impl Sink for InfluxSink {
             .send()
             .await?;
         if !resp.status().is_success() {
+            let status = resp.status();
             let text = resp.text().await.unwrap_or_default();
-            return Err(anyhow!("influx write failed: {} {}", resp.status(), text));
+            return Err(anyhow!("influx write failed: {} {}", status, text));
         }
         Ok(())
     }
