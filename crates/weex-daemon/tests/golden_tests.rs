@@ -17,6 +17,7 @@
 //! To update baselines:
 //! UPDATE_BASELINES=1 cargo test --test golden_tests
 
+#[path = "../../../tests/golden/mod.rs"]
 mod golden;
 
 use anyhow::Result;

@@ -51,7 +51,7 @@ pub fn build_app() -> (Router, Arc<AppState>) {
         provider,
         requests_total,
         latest: Mutex::new(None),
-        history: Mutex::new(Vec::with_capacity(256)),
+        history: Mutex::new(Vec::with_capacity(HISTORY_CAP)),
     });
 
     let router = Router::new()
@@ -121,19 +121,6 @@ async fn current(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         return (StatusCode::OK, Json(pkt)).into_response();
     }
     StatusCode::NO_CONTENT.into_response()
-}
-
-#[derive(Deserialize)]
-struct HistoryQuery { limit: Option<usize> }
-
-async fn history(State(state): State<Arc<AppState>>, Query(q): Query<HistoryQuery>) -> impl IntoResponse {
-    let limit = q.limit.unwrap_or(100).min(HISTORY_CAP);
-    let hist = state.history.lock().await;
-    let start = hist.len().saturating_sub(limit);
-    let slice = hist[start..].to_vec();
-    (StatusCode::OK, Json(slice)).into_response()
-}
-
 }
 
 #[derive(Deserialize)]
