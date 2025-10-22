@@ -2,7 +2,10 @@
 
 use crate::{IngestError, IngestResult, StationDriver};
 use std::net::SocketAddr;
-use tokio::{net::UdpSocket, time::{timeout, Duration}};
+use tokio::{
+    net::UdpSocket,
+    time::{timeout, Duration},
+};
 use weex_core::WeatherPacket;
 
 pub struct InterceptorUdpDriver {
@@ -23,19 +26,28 @@ impl InterceptorUdpDriver {
     }
 
     fn socket_ref(&self) -> Result<&UdpSocket, IngestError> {
-        self.socket.as_ref().ok_or_else(|| IngestError::DriverError("socket not active".into()))
+        self.socket
+            .as_ref()
+            .ok_or_else(|| IngestError::DriverError("socket not active".into()))
     }
 }
 
 #[async_trait::async_trait]
 impl StationDriver for InterceptorUdpDriver {
-    fn name(&self) -> &str { "interceptor-udp" }
+    fn name(&self) -> &str {
+        "interceptor-udp"
+    }
 
     async fn start(&mut self) -> IngestResult<()> {
-        if self.active { return Err(IngestError::DriverError("already started".into())); }
-        let sock = UdpSocket::bind(self.bind).await.map_err(|e| IngestError::CommunicationError(e.to_string()))?;
+        if self.active {
+            return Err(IngestError::DriverError("already started".into()));
+        }
+        let sock = UdpSocket::bind(self.bind)
+            .await
+            .map_err(|e| IngestError::CommunicationError(e.to_string()))?;
         // For tests and local runs, allow reuse
-        sock.set_broadcast(true).map_err(|e| IngestError::CommunicationError(e.to_string()))?;
+        sock.set_broadcast(true)
+            .map_err(|e| IngestError::CommunicationError(e.to_string()))?;
         self.socket = Some(sock);
         self.active = true;
         Ok(())
@@ -48,18 +60,23 @@ impl StationDriver for InterceptorUdpDriver {
     }
 
     async fn get_packet(&mut self) -> IngestResult<WeatherPacket> {
-        if !self.active { return Err(IngestError::DriverError("not active".into())); }
+        if !self.active {
+            return Err(IngestError::DriverError("not active".into()));
+        }
         let sock = self.socket_ref()?;
         let mut buf = vec![0u8; 2048];
-        let (n, _peer) = timeout(self.recv_timeout, sock.recv_from(&mut buf)).await
+        let (n, _peer) = timeout(self.recv_timeout, sock.recv_from(&mut buf))
+            .await
             .map_err(|_| IngestError::Timeout)??;
         let slice = &buf[..n];
-        let packet: WeatherPacket = serde_json::from_slice(slice)
-            .map_err(|e| IngestError::InvalidPacket(e.to_string()))?;
+        let packet: WeatherPacket =
+            serde_json::from_slice(slice).map_err(|e| IngestError::InvalidPacket(e.to_string()))?;
         Ok(packet)
     }
 
-    fn is_active(&self) -> bool { self.active }
+    fn is_active(&self) -> bool {
+        self.active
+    }
 }
 
 #[cfg(test)]
@@ -93,4 +110,3 @@ mod tests {
         driver.stop().await.unwrap();
     }
 }
-

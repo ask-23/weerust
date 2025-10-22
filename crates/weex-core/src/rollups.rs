@@ -28,10 +28,16 @@ impl Accumulator {
         }
 
         Some(match self.aggregate_type {
-            AggregateType::Min => self.observations.iter().copied().fold(f64::INFINITY, f64::min),
-            AggregateType::Max => {
-                self.observations.iter().copied().fold(f64::NEG_INFINITY, f64::max)
-            }
+            AggregateType::Min => self
+                .observations
+                .iter()
+                .copied()
+                .fold(f64::INFINITY, f64::min),
+            AggregateType::Max => self
+                .observations
+                .iter()
+                .copied()
+                .fold(f64::NEG_INFINITY, f64::max),
             AggregateType::Sum => self.observations.iter().sum(),
             AggregateType::Avg => {
                 let sum: f64 = self.observations.iter().sum();

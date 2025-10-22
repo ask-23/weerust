@@ -75,13 +75,19 @@ impl DbDump {
         // Check for missing/extra tables
         for table_name in self.tables.keys() {
             if !other.tables.contains_key(table_name) {
-                differences.push(format!("Table '{}' exists in actual but not in expected", table_name));
+                differences.push(format!(
+                    "Table '{}' exists in actual but not in expected",
+                    table_name
+                ));
             }
         }
 
         for table_name in other.tables.keys() {
             if !self.tables.contains_key(table_name) {
-                differences.push(format!("Table '{}' exists in expected but not in actual", table_name));
+                differences.push(format!(
+                    "Table '{}' exists in expected but not in actual",
+                    table_name
+                ));
             }
         }
 
@@ -120,7 +126,8 @@ fn compare_tables(actual: &TableDump, expected: &TableDump) -> Vec<String> {
             if let Some(expected_val) = expected_row.get(key) {
                 if actual_val != expected_val {
                     // Special handling for floating point comparison
-                    if let (Ok(a), Ok(e)) = (actual_val.parse::<f64>(), expected_val.parse::<f64>()) {
+                    if let (Ok(a), Ok(e)) = (actual_val.parse::<f64>(), expected_val.parse::<f64>())
+                    {
                         if (a - e).abs() > 0.0001 {
                             differences.push(format!(
                                 "Table '{}', row {}, column '{}': value mismatch (actual: {}, expected: {})",
@@ -158,8 +165,7 @@ fn compare_tables(actual: &TableDump, expected: &TableDump) -> Vec<String> {
 /// Dump a MySQL database using mysqldump
 async fn dump_database(database_url: &str) -> Result<String> {
     // Parse database URL
-    let url = url::Url::parse(database_url)
-        .context("Invalid database URL")?;
+    let url = url::Url::parse(database_url).context("Invalid database URL")?;
 
     let host = url.host_str().unwrap_or("localhost");
     let database = url.path().trim_start_matches('/');
@@ -172,8 +178,10 @@ async fn dump_database(database_url: &str) -> Result<String> {
     // Run mysqldump
     let output = Command::new("mysqldump")
         .args(&[
-            "-h", host,
-            "-u", username,
+            "-h",
+            host,
+            "-u",
+            username,
             "--skip-comments",
             "--skip-extended-insert",
             "--compact",

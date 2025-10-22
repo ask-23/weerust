@@ -29,6 +29,9 @@ pub enum IngestError {
 
     #[error("Timeout waiting for data")]
     Timeout,
+
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
 }
 
 pub type IngestResult<T> = Result<T, IngestError>;

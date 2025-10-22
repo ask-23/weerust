@@ -1,10 +1,10 @@
 //! Simulated weather station for testing
 
 use crate::{IngestError, IngestResult, StationDriver};
-use weex_core::{unit_systems, ObservationValue, WeatherPacket};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::time::{sleep, Duration};
+use weex_core::{unit_systems, ObservationValue, WeatherPacket};
 
 /// Simulator driver that generates synthetic weather data
 pub struct SimulatorDriver {
@@ -34,10 +34,7 @@ impl SimulatorDriver {
         let temp = self.base_temp + variation;
 
         let mut observations = HashMap::new();
-        observations.insert(
-            "outTemp".to_string(),
-            ObservationValue::Float(temp),
-        );
+        observations.insert("outTemp".to_string(), ObservationValue::Float(temp));
         observations.insert(
             "outHumidity".to_string(),
             ObservationValue::Float(65.0 + variation),
@@ -54,10 +51,7 @@ impl SimulatorDriver {
             "windDir".to_string(),
             ObservationValue::Float((now % 360) as f64),
         );
-        observations.insert(
-            "rain".to_string(),
-            ObservationValue::Float(0.0),
-        );
+        observations.insert("rain".to_string(), ObservationValue::Float(0.0));
 
         WeatherPacket {
             date_time: now,
@@ -87,9 +81,7 @@ impl StationDriver for SimulatorDriver {
 
     async fn stop(&mut self) -> IngestResult<()> {
         if !self.active {
-            return Err(IngestError::DriverError(
-                "Driver not started".to_string(),
-            ));
+            return Err(IngestError::DriverError("Driver not started".to_string()));
         }
         self.active = false;
         tracing::info!("Simulator driver stopped");

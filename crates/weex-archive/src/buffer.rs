@@ -1,8 +1,8 @@
 //! Packet buffering for interval management
 
 use crate::{ArchiveError, ArchiveResult};
-use weex_core::WeatherPacket;
 use std::collections::VecDeque;
+use weex_core::WeatherPacket;
 
 /// Buffer for collecting packets within an interval
 pub struct PacketBuffer {

@@ -17,6 +17,9 @@
 //! To update baselines:
 //! UPDATE_BASELINES=1 cargo test --test golden_tests
 
+// Note: The golden module is at workspace level in tests/golden/
+// This path reference is relative to the workspace root
+#[path = "../../../tests/golden/mod.rs"]
 mod golden;
 
 use anyhow::Result;

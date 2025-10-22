@@ -91,26 +91,45 @@ mod tests {
     #[test]
     fn test_temperature_conversion() {
         // F to C: 32F = 0C
-        let result = convert(32.0, unit_systems::US, unit_systems::METRIC, UnitGroup::Temperature)
-            .unwrap();
+        let result = convert(
+            32.0,
+            unit_systems::US,
+            unit_systems::METRIC,
+            UnitGroup::Temperature,
+        )
+        .unwrap();
         assert!((result - 0.0).abs() < 0.001);
 
         // C to F: 0C = 32F
-        let result = convert(0.0, unit_systems::METRIC, unit_systems::US, UnitGroup::Temperature)
-            .unwrap();
+        let result = convert(
+            0.0,
+            unit_systems::METRIC,
+            unit_systems::US,
+            UnitGroup::Temperature,
+        )
+        .unwrap();
         assert!((result - 32.0).abs() < 0.001);
 
         // F to C: 212F = 100C
-        let result =
-            convert(212.0, unit_systems::US, unit_systems::METRIC, UnitGroup::Temperature)
-                .unwrap();
+        let result = convert(
+            212.0,
+            unit_systems::US,
+            unit_systems::METRIC,
+            UnitGroup::Temperature,
+        )
+        .unwrap();
         assert!((result - 100.0).abs() < 0.001);
     }
 
     #[test]
     fn test_same_unit_conversion() {
-        let result = convert(25.0, unit_systems::US, unit_systems::US, UnitGroup::Temperature)
-            .unwrap();
+        let result = convert(
+            25.0,
+            unit_systems::US,
+            unit_systems::US,
+            UnitGroup::Temperature,
+        )
+        .unwrap();
         assert_eq!(result, 25.0);
     }
 

@@ -1,0 +1,67 @@
+# syntax=docker/dockerfile:1.6
+# Multi-stage Dockerfile for WeeWix Rust Application
+# Optimized for size, security, and build performance
+
+# ============================================================================
+# Build Stage - Compile Rust binary with caching
+# ============================================================================
+FROM rust:1.85-bookworm AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Copy dependency manifests first for layer caching
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+
+# Build dependencies separately to leverage Docker cache
+# This layer only rebuilds when dependencies change
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/workspace/target \
+    cargo fetch
+
+# Build the application with release optimizations
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/workspace/target \
+    cargo build --release -p weewx-cli && \
+    cp /workspace/target/release/weewx-cli /workspace/weewx-cli-binary
+
+# Strip debug symbols to reduce binary size
+RUN strip /workspace/weewx-cli-binary
+
+# ============================================================================
+# Runtime Stage - Minimal distroless image
+# ============================================================================
+FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
+
+# Use non-root user for security (uid/gid 65532)
+USER nonroot:nonroot
+WORKDIR /app
+
+# Copy only the compiled binary from builder
+COPY --from=builder --chown=nonroot:nonroot /workspace/weewx-cli-binary /app/weewx
+
+# Copy default configuration template
+COPY --chown=nonroot:nonroot config.example.toml /app/config.toml
+
+# Set environment variables
+ENV RUST_LOG=info \
+    RUST_BACKTRACE=1
+
+# Expose HTTP endpoint port (GW1100 posts here)
+EXPOSE 8080
+
+# Expose UDP interceptor port (optional, for devices broadcasting UDP)
+EXPOSE 9999/udp
+
+# Health check for the HTTP endpoint
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ["/app/weewx", "--version"] || exit 1
+
+# Run the application
+ENTRYPOINT ["/app/weewx"]

@@ -1,0 +1,24 @@
+[package]
+name = "weewx-sinks"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[features]
+default = []
+sqlite = ["dep:rusqlite"]
+postgres = ["dep:sqlx"]
+influx = ["dep:reqwest"]
+
+[dependencies]
+weex-core = { path = "../weex-core" }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+rusqlite = { version = "0.31", optional = true, features = ["bundled"] }
+sqlx = { version = "0.7", optional = true, default-features = false, features = ["postgres", "runtime-tokio-rustls", "macros"] }
+reqwest = { version = "0.12", optional = true, default-features = false, features = ["rustls-tls", "json"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+

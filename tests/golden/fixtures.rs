@@ -8,20 +8,18 @@ use weex_core::WeatherPacket;
 
 /// Load a single packet fixture
 pub fn load_packet(path: &Path) -> Result<WeatherPacket> {
-    let json = fs::read_to_string(path)
-        .with_context(|| format!("Failed to read fixture: {:?}", path))?;
+    let json =
+        fs::read_to_string(path).with_context(|| format!("Failed to read fixture: {:?}", path))?;
 
-    serde_json::from_str(&json)
-        .with_context(|| format!("Failed to parse packet JSON: {:?}", path))
+    serde_json::from_str(&json).with_context(|| format!("Failed to parse packet JSON: {:?}", path))
 }
 
 /// Load multiple packets from a fixture file
 pub fn load_packets(path: &Path) -> Result<Vec<WeatherPacket>> {
-    let json = fs::read_to_string(path)
-        .with_context(|| format!("Failed to read fixture: {:?}", path))?;
+    let json =
+        fs::read_to_string(path).with_context(|| format!("Failed to read fixture: {:?}", path))?;
 
-    serde_json::from_str(&json)
-        .with_context(|| format!("Failed to parse packets JSON: {:?}", path))
+    serde_json::from_str(&json).with_context(|| format!("Failed to parse packets JSON: {:?}", path))
 }
 
 /// Load all fixtures from a directory
@@ -55,8 +53,7 @@ pub fn load_all_fixtures(dir: &Path) -> Result<Vec<(String, Vec<WeatherPacket>)>
 /// Save packets to a fixture file (for creating test data)
 pub fn save_packets(path: &Path, packets: &[WeatherPacket]) -> Result<()> {
     let json = serde_json::to_string_pretty(packets)?;
-    fs::write(path, json)
-        .with_context(|| format!("Failed to write fixture: {:?}", path))?;
+    fs::write(path, json).with_context(|| format!("Failed to write fixture: {:?}", path))?;
     Ok(())
 }
 
@@ -64,8 +61,8 @@ pub fn save_packets(path: &Path, packets: &[WeatherPacket]) -> Result<()> {
 mod tests {
     use super::*;
     use std::collections::HashMap;
-    use weex_core::ObservationValue;
     use tempfile::TempDir;
+    use weex_core::ObservationValue;
 
     fn make_test_packet() -> WeatherPacket {
         let mut observations = HashMap::new();

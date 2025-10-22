@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: weerust-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS:-rootpass}
+      MARIADB_DATABASE: ${DB_NAME:-weewx}
+      MARIADB_USER: ${DB_USER:-weewx}
+      MARIADB_PASSWORD: ${DB_PASS:-weewxpass}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    command: [
+      "--innodb-buffer-pool-size=2G",
+      "--innodb-log-file-size=512M",
+      "--max-connections=400"
+    ]
+
+  weerust:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weerust-rust
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    env_file:
+      - .env
+    environment:
+      RUST_LOG: ${RUST_LOG:-info}
+      LISTEN_PORT: ${LISTEN_PORT:-8080}
+      DB_HOST: ${DB_HOST:-mariadb}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-weewx}
+      DB_USER: ${DB_USER:-weewx}
+      DB

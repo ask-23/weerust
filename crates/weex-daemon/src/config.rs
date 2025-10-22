@@ -24,8 +24,8 @@ pub struct DaemonConfig {
 impl DaemonConfig {
     /// Load configuration from environment variables
     pub fn from_env() -> Result<Self> {
-        let database_url = env::var("DATABASE_URL")
-            .context("DATABASE_URL environment variable not set")?;
+        let database_url =
+            env::var("DATABASE_URL").context("DATABASE_URL environment variable not set")?;
 
         let archive_interval = env::var("ARCHIVE_INTERVAL")
             .unwrap_or_else(|_| "300".to_string())
@@ -42,8 +42,7 @@ impl DaemonConfig {
             .parse()
             .context("Invalid UNIT_SYSTEM")?;
 
-        let driver = env::var("STATION_DRIVER")
-            .unwrap_or_else(|_| "simulator".to_string());
+        let driver = env::var("STATION_DRIVER").unwrap_or_else(|_| "simulator".to_string());
 
         Ok(Self {
             database_url,

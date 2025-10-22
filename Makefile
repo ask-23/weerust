@@ -14,3 +14,11 @@ test:
 dev:
 	RUST_LOG=info cargo run -p weewx-cli
 
+
+
+# Docker build (multi-arch) using buildx. Requires DOCKER_BUILDKIT=1 and buildx.
+docker-build:
+	docker buildx build --platform linux/amd64,linux/arm64 -t weewx-rs:local --load .
+
+docker-image:
+	docker build -t weewx-rs:local .

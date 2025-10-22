@@ -11,12 +11,16 @@ tracing = "0.1"
 weewx-obs = { path = "../weewx-obs" }
 weewx-config = { path = "../weewx-config" }
 opentelemetry = { version = "0.23", features = ["metrics"] }
-opentelemetry-sdk = { version = "0.23", features = ["metrics"] }
+opentelemetry_sdk = { version = "0.23", features = ["metrics"] }
 opentelemetry-prometheus = "0.16"
 prometheus = "0.13"
 weex-core = { path = "../weex-core" }
+weex-ingest = { path = "../weex-ingest" }
+weewx-sinks = { path = "../weewx-sinks" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
 
 [dev-dependencies]
 tower = "0.5"

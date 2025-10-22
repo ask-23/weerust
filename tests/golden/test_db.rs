@@ -101,9 +101,7 @@ impl TestDb {
 
     /// Verify database is ready
     pub async fn ping(&self) -> Result<()> {
-        sqlx::query("SELECT 1")
-            .execute(&self.pool)
-            .await?;
+        sqlx::query("SELECT 1").execute(&self.pool).await?;
         Ok(())
     }
 }

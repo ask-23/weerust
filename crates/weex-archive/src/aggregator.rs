@@ -1,11 +1,11 @@
 //! Archive interval aggregation logic
 
 use crate::{ArchiveError, ArchiveResult, PacketBuffer};
-use weex_core::{aggregate_packets, unit_systems, ArchiveRecord, ObservationValue, WeatherPacket};
-use weex_db::{DbClient, schema::ArchiveRow};
-use std::collections::HashMap;
 use chrono::{DateTime, Utc};
+use std::collections::HashMap;
 use tracing::{debug, info, instrument};
+use weex_core::{aggregate_packets, unit_systems, ArchiveRecord, ObservationValue, WeatherPacket};
+use weex_db::{schema::ArchiveRow, DbClient};
 
 /// Aggregator for converting packets to archive records
 pub struct IntervalAggregator {
@@ -74,9 +74,8 @@ impl IntervalAggregator {
         date_time: i64,
         aggregates: HashMap<String, (weex_core::AggregateType, Option<f64>)>,
     ) -> ArchiveRow {
-        let get_value = |key: &str| -> Option<f64> {
-            aggregates.get(key).and_then(|(_, val)| *val)
-        };
+        let get_value =
+            |key: &str| -> Option<f64> { aggregates.get(key).and_then(|(_, val)| *val) };
 
         ArchiveRow {
             date_time,
@@ -131,8 +130,14 @@ mod tests {
         // Note: Full integration tests with DB are in tests/golden/
         // This just validates structure construction
         let mut aggregates = HashMap::new();
-        aggregates.insert("outTemp".to_string(), (weex_core::AggregateType::Avg, Some(25.5)));
-        aggregates.insert("outHumidity".to_string(), (weex_core::AggregateType::Avg, Some(65.0)));
+        aggregates.insert(
+            "outTemp".to_string(),
+            (weex_core::AggregateType::Avg, Some(25.5)),
+        );
+        aggregates.insert(
+            "outHumidity".to_string(),
+            (weex_core::AggregateType::Avg, Some(65.0)),
+        );
 
         // Mock DB client would be needed for full test
         // See golden tests for complete validation

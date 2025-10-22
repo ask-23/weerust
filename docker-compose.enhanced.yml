@@ -1,0 +1,198 @@
+version: "3.9"
+
+# WeeWix Docker Compose Configuration
+# Includes: WeeWix Rust app, MariaDB (600GB volume), and optional GW1100 mock
+
+networks:
+  weewix-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+services:
+  # ============================================================================
+  # MariaDB Database - Configured for 600GB weather data storage
+  # ============================================================================
+  mariadb:
+    image: mariadb:11
+    container_name: weewix-mariadb
+    restart: unless-stopped
+    networks:
+      weewix-net:
+        ipv4_address: 172.25.0.10
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS:-rootpass}
+      MARIADB_DATABASE: ${DB_NAME:-weewx}
+      MARIADB_USER: ${DB_USER:-weewx}
+      MARIADB_PASSWORD: ${DB_PASS:-weewxpass}
+      TZ: ${TIMEZONE:-America/Chicago}
+    ports:
+      - "${DB_PORT_EXTERNAL:-3306}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./scripts/db-init:/docker-entrypoint-initdb.d:ro
+      - ./scripts/db-backup:/backup
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      # Performance tuning for 600GB database
+      - --innodb-buffer-pool-size=4G
+      - --innodb-log-file-size=1G
+      - --innodb-flush-log-at-trx-commit=2
+      - --max-connections=500
+      - --table-open-cache=4000
+      - --query-cache-size=0
+      - --query-cache-type=0
+      # Archive optimization
+      - --innodb-file-per-table=1
+      - --innodb-compression-level=6
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================================
+  # WeeWix Rust Application - Weather data ingestion and processing
+  # ============================================================================
+  weewix:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimized
+      cache_from:
+        - weewix:latest
+    image: weewix:latest
+    container_name: weewix-app
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      weewix-net:
+        ipv4_address: 172.25.0.20
+    env_file:
+      - .env
+    environment:
+      # Application settings
+      RUST_LOG: ${RUST_LOG:-info}
+      RUST_BACKTRACE: ${RUST_BACKTRACE:-1}
+
+      # Station configuration
+      STATION_ID: ${STATION_ID:-home}
+      STATION_TIMEZONE: ${STATION_TIMEZONE:-America/Chicago}
+      STATION_FORMAT: ${STATION_FORMAT:-ecowitt}
+
+      # HTTP server
+      HTTP_BIND: ${HTTP_BIND:-0.0.0.0:8080}
+
+      # UDP interceptor
+      UDP_BIND: ${UDP_BIND:-0.0.0.0:9999}
+
+      # Database connection
+      DB_HOST: ${DB_HOST:-mariadb}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-weewx}
+      DB_USER: ${DB_USER:-weewx}
+      DB_PASS: ${DB_PASS:-weewxpass}
+
+      # Logging
+      INSERT_LOGGING: ${INSERT_LOGGING:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      # HTTP endpoint for Ecowitt GW1100 POST requests
+      - "${WEEWIX_HTTP_PORT:-8080}:8080"
+      # UDP interceptor for devices broadcasting UDP
+      - "${WEEWIX_UDP_PORT:-9999}:9999/udp"
+    volumes:
+      # Application logs
+      - weewix_logs:/var/lib/weewx/logs
+      # Optional: Filesystem sink for JSONL output
+      - weewix_data:/var/lib/weewx/data
+      # Configuration override (optional)
+      - ./config.toml:/app/config.toml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "service=weewix"
+
+  # ============================================================================
+  # GW1100 Mock Device - Simulates Ecowitt weather station HTTP posts
+  # ============================================================================
+  gw1100-mock:
+    image: curlimages/curl:8.10.1
+    container_name: weewix-mock-device
+    restart: unless-stopped
+    depends_on:
+      weewix:
+        condition: service_healthy
+    networks:
+      - weewix-net
+    environment:
+      POST_INTERVAL: ${MOCK_POST_INTERVAL:-5}
+      WEEWIX_URL: ${MOCK_WEEWIX_URL:-http://172.25.0.20:8080/data}
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      'echo "Starting GW1100 mock device...";
+       while true; do
+         ts=$$(date +%s);
+         temp_f=$$(awk -v min=60 -v max=90 "BEGIN{srand(); print min+rand()*(max-min)}");
+         humidity=$$(awk -v min=30 -v max=80 "BEGIN{srand(); print int(min+rand()*(max-min))}");
+         wind_dir=$$(awk -v min=0 -v max=360 "BEGIN{srand(); print int(min+rand()*(max-min))}");
+         wind_speed=$$(awk -v min=0 -v max=25 "BEGIN{srand(); print min+rand()*(max-min)}");
+         solar=$$(awk -v min=0 -v max=1000 "BEGIN{srand(); print min+rand()*(max-min)}");
+         uv=$$(awk -v min=0 -v max=10 "BEGIN{srand(); print int(min+rand()*(max-min))}");
+         baro_abs=$$(awk -v min=28.5 -v max=31.5 "BEGIN{srand(); print min+rand()*(max-min)}");
+         baro_rel=$$(awk -v min=28.5 -v max=31.5 "BEGIN{srand(); print min+rand()*(max-min)}");
+
+         echo "[$$ts] Posting weather data: temp=$${temp_f}F, humidity=$${humidity}%, wind=$${wind_speed}mph @ $${wind_dir}°";
+
+         curl -s -X POST "$$WEEWIX_URL"
+           -H "Content-Type: application/x-www-form-urlencoded"
+           --data "stationtype=GW1100A_V2.3.5&runtime=123456&heap=45678&baromabsin=$${baro_abs}&baromrelin=$${baro_rel}&tempf=$${temp_f}&humidity=$${humidity}&winddir=$${wind_dir}&windspeedmph=$${wind_speed}&windgustmph=$$(awk -v s=$$wind_speed \"BEGIN{print s*1.5}\")&solarradiation=$${solar}&uv=$${uv}&dailyrainin=0.00&weeklyrainin=0.25&monthlyrainin=1.23&yearlyrainin=45.67&dateutc=$$ts&softwaretype=GW1100_mock&model=GW1100A&freq=915M"
+           -w "\nHTTP Status: %{http_code}\n" || echo "POST failed";
+
+         sleep $$POST_INTERVAL;
+       done'
+    profiles:
+      - testing
+      - mock
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+# ============================================================================
+# Volume Definitions
+# ============================================================================
+volumes:
+  # MariaDB data - configured for 600GB weather archive
+  db_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DB_VOLUME_PATH:-./data/mysql}
+
+  # WeeWix application logs
+  weewix_logs:
+    driver: local
+
+  # WeeWix data output (JSONL filesystem sink)
+  weewix_data:
+    driver: local

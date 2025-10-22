@@ -14,4 +14,3 @@ pub fn init(service_name: &str) {
 
     tracing::info!(service = %service_name, "Observability initialized");
 }
-

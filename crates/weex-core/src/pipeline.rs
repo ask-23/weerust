@@ -16,4 +16,3 @@ pub trait Processor: Send + Sync {
 pub trait Sink: Send + Sync {
     async fn emit(&mut self, packet: &WeatherPacket) -> Result<()>;
 }
-

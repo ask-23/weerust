@@ -1,0 +1,75 @@
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+*.md
+docs/
+README*
+LICENSE*
+CHANGELOG*
+
+# CI/CD
+.github/
+.gitlab/
+azure-pipelines.yml
+.travis.yml
+
+# Environment and secrets
+.env
+.env.*
+*.key
+*.pem
+*.crt
+
+# Test artifacts
+tests/
+test-results/
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# System files
+Thumbs.DB
+desktop.ini
+
+# Claude and AI tools
+.claude/
+.taskmaster/
+.hive-mind/
+.swarm/
+.claude-flow/
+.mcp.json
+auggie-summary.md
+AGENT_BRIEF.md
+DECISIONS.md
+CLAUDE.md
+
+# Scripts (keep in source, exclude from image)
+scripts/
